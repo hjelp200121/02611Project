@@ -12,7 +12,7 @@ def cvxSolve(S, gamma):
     return result, X.value
 
 npoints = 100
-gammas = np.logspace(10**(-2), 10**0, npoints)
+gammas = np.logspace(-2, 0, npoints)
 S = np.array([
     [1.00, -0.50, 0.10, -0.90],
     [-0.50, 1.25, -0.05, 1.05],
@@ -24,7 +24,10 @@ y = np.zeros(npoints)
 
 for i, gamma in enumerate(gammas):
     result, X = cvxSolve(S, gamma)
-    #print(X)
+    if i == 0:
+        print(gamma)
+        print(X)
+        print(np.linalg.inv(X)-S)
     x[i] = np.trace(S@X) - np.linalg.slogdet(X)[1]
     y[i] = np.sum(np.abs(X)) - np.sum(np.diag(X))
 
