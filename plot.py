@@ -13,9 +13,8 @@ if __name__ == "__main__":
     npoints = 10
     S = np.loadtxt("data/sp500.txt")
     gammas = np.logspace(-2, -1, npoints)
-    gammas = gammas[1:]
 
-    Xs = [np.load(f"X_{i}.npy") for i in range(1, npoints)]
+    Xs = [np.load(f"X_{i}.npy") for i in range(npoints)]
     gs = [g(X, S) for X in Xs]
     hs = [h(X, 1.0) for X in Xs]
     nnzs = [off_diag_nnz(X) for X in Xs]

@@ -72,6 +72,9 @@ def proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max
 
     return x
 
+def armijo(gx, grad_gx, gx_tent, step, t):
+    return gx_tent <= gx + np.sum(grad_gx*step) + 1/(2*t)*np.sum(step*step)
+
 def step(x, g, grad_g, prox_th, beta):
     t = 1.0
     grad_gx = grad_g(x)
@@ -79,19 +82,15 @@ def step(x, g, grad_g, prox_th, beta):
     while True:
         x_tent = prox_th(x - t*grad_gx, t)
         step = x_tent - x
-        gx_tent = g(x_tent)
 
-        cond1 = is_spd(x_tent)
-        cond2 = gx_tent <= gx + np.sum(grad_gx*step) + 1/(2*t)*np.sum(step*step)
-
-        if cond1 and cond2:
+        if armijo(gx, grad_gx, g(x_tent), step, t) and is_spd(x_tent):
             break
 
         t = t*beta
     
     return x_tent, t
 
-def accelerated_proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max_iter=10000):
+def accelerated_proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.9, atol=1e-2, max_iter=10000):
     x = x0
     y = x
     gamma = 1.0

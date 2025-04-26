@@ -17,28 +17,17 @@ if __name__ == "__main__":
     n = S.shape[0]
     X0 = np.eye(n)
 
-    X0 = np.load("X_1.npy")
-    gamma = gammas[0]
-    X = accelerated_proximal_gradient(
-        ft.partial(g, S=S),
-        ft.partial(grad_g, S=S),
-        ft.partial(prox_th, gamma=gamma),
-        ft.partial(dual_gap, S=S, gamma=gamma),
-        X0,
-    )
-    np.save("X_0.npy", X)
-
-    # for i, gamma in reversed_enumerate(gammas):
-    #     print(f"optimizing for gamma={gamma}")
-    #     X = accelerated_proximal_gradient(
-    #         ft.partial(g, S=S),
-    #         ft.partial(grad_g, S=S),
-    #         ft.partial(prox_th, gamma=gamma),
-    #         ft.partial(dual_gap, S=S, gamma=gamma),
-    #         X0,
-    #     )
-    #     np.save(f"X_{i}.npy", X)
-    #     X0 = X
+    for i, gamma in reversed_enumerate(gammas):
+        print(f"optimizing for gamma={gamma}")
+        X = accelerated_proximal_gradient(
+            ft.partial(g, S=S),
+            ft.partial(grad_g, S=S),
+            ft.partial(prox_th, gamma=gamma),
+            ft.partial(dual_gap, S=S, gamma=gamma),
+            X0,
+        )
+        np.save(f"X_{i}.npy", X)
+        X0 = X
 
 
 
