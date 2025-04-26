@@ -39,6 +39,7 @@ def dual_gap(X, S, gamma):
     _, logdet = np.linalg.slogdet(S + U)
     return g(X, S) + h(X, gamma) - logdet - S.shape[0]
 
+
 def proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max_iter=10000):
     x = x0
     
@@ -57,9 +58,6 @@ def proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max
             if cond1 and cond2:
                 break
 
-            if t < 1e-4:
-                print(f"small step size: step: {t}, cond1: {cond1}, cond2: {cond2}")
-
             t = t*beta
         
         x = x_tent
@@ -73,6 +71,46 @@ def proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max
             print(f"iteration: {i}, dual gap: {delta}")
 
     return x
+
+def step(x, g, grad_g, prox_th, beta):
+    t = 1.0
+    grad_gx = grad_g(x)
+    gx = g(x)
+    while True:
+        x_tent = prox_th(x - t*grad_gx, t)
+        step = x_tent - x
+        gx_tent = g(x_tent)
+
+        cond1 = is_spd(x_tent)
+        cond2 = gx_tent <= gx + np.sum(grad_gx*step) + 1/(2*t)*np.sum(step*step)
+
+        if cond1 and cond2:
+            break
+
+        t = t*beta
+    
+    return x_tent, t
+
+def accelerated_proximal_gradient(g, grad_g, prox_th, dual_gap, x0, beta=0.5, atol=1e-2, max_iter=10000):
+    x = x0
+    y = x
+    gamma = 1.0
+
+    for i in range(max_iter):
+        delta = dual_gap(x)
+        if i % 100 == 0:
+            print(f"iteration: {i}, dual gap: {delta}")
+        if delta < atol:
+            break
+
+        x_next, _t = step(y, g, grad_g, prox_th, beta)
+        gamma_next = 0.5 * (1.0 + np.sqrt(1.0 + 4.0 * gamma * gamma))
+        y = x_next + ((gamma - 1.0) / gamma_next) * (x_next - x)
+        x = x_next
+        gamma = gamma_next
+
+    return x
+
 
 if __name__ == "__main__":
     # A = np.random.rand(5, 5)
