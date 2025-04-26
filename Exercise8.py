@@ -3,35 +3,43 @@ import matplotlib.pyplot as plt
 
 from Exercise7 import *
 
-def number_of_off_diag_zeros(X):
+def off_diag_nnz(X):
+    X = np.copy(X)
     np.fill_diagonal(X, 1)
     return np.sum(np.abs(X) > 1e-2)
 
-npoints = 10
-gammas = np.logspace(-2, -1, npoints)
+def reversed_enumerate(iter):
+    return zip(range(len(iter)-1, -1, -1), reversed(iter))
 
-S = np.loadtxt("data/sp500.txt")
-n = S.shape[0]
-X0 = np.eye(n)
+if __name__ == "__main__":
+        
+    npoints = 10
+    gammas = np.logspace(-2, -1, npoints)
 
-x = np.zeros(npoints)
-y = np.zeros(npoints)
-off_diag_zeros = np.zeros(npoints)
+    S = np.loadtxt("data/sp500.txt")
+    n = S.shape[0]
+    X0 = np.load("X.npy")
 
-for i, gamma in enumerate(gammas):
-    X = proximal_gradient(ft.partial(g,S=S), ft.partial(grad_g,S=S), ft.partial(prox_th,gamma=gamma), X0, beta=0.8)
+    gs = np.zeros(npoints)
+    hs = np.zeros(npoints)
+    nnz = np.zeros(npoints)
 
-    x[i] = np.trace(S@X) - np.linalg.slogdet(X)[1]
-    y[i] = np.sum(np.abs(X)) - np.sum(np.diag(X))
-    off_diag_zeros[i] = number_of_off_diag_zeros(X)
+    for i, gamma in reversed_enumerate(gammas):
+        print(f"optimizing for gamma={gamma}")
+        X = proximal_gradient(
+            ft.partial(g, S=S),
+            ft.partial(grad_g, S=S),
+            ft.partial(prox_th, gamma=gamma),
+            ft.partial(dual_gap, S=S, gamma=gamma),
+            X0,
+        )
+        X0 = X
+        gs[i] = g(X, S)
+        hs[i] = h(X, gamma)
+        nnz[i] = off_diag_nnz(X)
+        
+    np.save("g.npy", gs)
+    np.save("h.npy", hs)
+    np.save("nnz.npy", nnz)
 
-# plot trade off curve
-plt.plot(x,y)
-plt.savefig("test2.pdf")
 
-# clear plot
-plt.cla()
-
-# plot off diagonal zeros
-plt.plot(gammas, off_diag_zeros)
-plt.savefig("plot2.pdf")
