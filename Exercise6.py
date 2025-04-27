@@ -31,5 +31,10 @@ for i, gamma in enumerate(gammas):
     x[i] = np.trace(S@X) - np.linalg.slogdet(X)[1]
     y[i] = np.sum(np.abs(X)) - np.sum(np.diag(X))
 
-plt.plot(x,y)
-plt.savefig("plot.pdf")
+fig = plt.figure()
+ax = fig.subplots()
+ax.plot(x,y)
+ax.set_xlabel("$f_1(X(\\gamma))$")
+ax.set_ylabel("$f_2(X(\\gamma))$")
+fig.tight_layout()
+fig.savefig("plot.pdf")
